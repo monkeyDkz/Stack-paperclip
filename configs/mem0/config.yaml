@@ -1,0 +1,24 @@
+# ============================================================
+# MEM0 — Configuration Ollama local (gratuit, pas de clé API)
+# ============================================================
+
+vector_store:
+  provider: chroma
+  config:
+    host: chroma
+    port: 8000
+    collection_name: mem0
+
+llm:
+  provider: ollama
+  config:
+    model: qwen3:14b
+    ollama_base_url: http://host.docker.internal:11434
+    temperature: 0.1
+    max_tokens: 2000
+
+embedder:
+  provider: huggingface
+  config:
+    # Garder all-MiniLM-L6-v2 (384 dims) — compatible avec la collection Chroma existante
+    model: sentence-transformers/all-MiniLM-L6-v2

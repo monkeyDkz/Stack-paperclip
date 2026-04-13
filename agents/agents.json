@@ -1,0 +1,121 @@
+[
+  {
+    "name": "CEO",
+    "slug": "ceo",
+    "model": "claude-opus-4-6",
+    "prompt_file": "agents/prompts/ceo.txt",
+    "prompt_length": 7207
+  },
+  {
+    "name": "CFO",
+    "slug": "cfo",
+    "model": "claude-sonnet-4-6",
+    "prompt_file": "agents/prompts/cfo.txt",
+    "prompt_length": 8404
+  },
+  {
+    "name": "CPO",
+    "slug": "cpo",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/cpo.txt",
+    "prompt_length": 3482
+  },
+  {
+    "name": "CTO",
+    "slug": "cto",
+    "model": "claude-opus-4-6",
+    "prompt_file": "agents/prompts/cto.txt",
+    "prompt_length": 4895
+  },
+  {
+    "name": "Content Writer",
+    "slug": "content-writer",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/content-writer.txt",
+    "prompt_length": 3529
+  },
+  {
+    "name": "Data Analyst",
+    "slug": "data-analyst",
+    "model": "claude-sonnet-4-6",
+    "prompt_file": "agents/prompts/data-analyst.txt",
+    "prompt_length": 9869
+  },
+  {
+    "name": "Designer",
+    "slug": "designer",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/designer.txt",
+    "prompt_length": 4506
+  },
+  {
+    "name": "DevOps",
+    "slug": "devops",
+    "model": "claude-sonnet-4-6",
+    "prompt_file": "agents/prompts/devops.txt",
+    "prompt_length": 3515
+  },
+  {
+    "name": "Growth Lead",
+    "slug": "growth-lead",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/growth-lead.txt",
+    "prompt_length": 12569
+  },
+  {
+    "name": "Lead Backend",
+    "slug": "lead-backend",
+    "model": "claude-sonnet-4-6",
+    "prompt_file": "agents/prompts/lead-backend.txt",
+    "prompt_length": 4059
+  },
+  {
+    "name": "Lead Frontend",
+    "slug": "lead-frontend",
+    "model": "claude-sonnet-4-6",
+    "prompt_file": "agents/prompts/lead-frontend.txt",
+    "prompt_length": 4485
+  },
+  {
+    "name": "QA",
+    "slug": "qa",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/qa.txt",
+    "prompt_length": 3503
+  },
+  {
+    "name": "Researcher",
+    "slug": "researcher",
+    "model": "claude-sonnet-4-6",
+    "prompt_file": "agents/prompts/researcher.txt",
+    "prompt_length": 11045
+  },
+  {
+    "name": "SEO",
+    "slug": "seo",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/seo.txt",
+    "prompt_length": 3504
+  },
+  {
+    "name": "Sales",
+    "slug": "sales",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/sales.txt",
+    "prompt_length": 15458
+  },
+  {
+    "name": "Scraper",
+    "slug": "scraper",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/scraper.txt",
+    "prompt_length": 4581
+  },
+  {
+    "name": "Security",
+    "slug": "security",
+    "model": "claude-haiku-4-5-20251001",
+    "prompt_file": "agents/prompts/security.txt",
+    "prompt_length": 3513
+  }
+]
