@@ -137,7 +137,6 @@ curl -X POST "http://twenty-server:3000/graphql" \
   -d '{"query": "mutation { updateOpportunity(id: \"UUID\", data: { stage: MEETING }) { id stage } }"}'
 
 ### n8n (automatisation)
-- Webhook: $N8N_WEBHOOK_URL/agent-event | Auth: X-N8N-Agent-Key: $N8N_AGENT_KEY
 - Events: notify, email-sequence, lead-score
 
 # Lire les bookings (via channel calendar)
@@ -151,26 +150,18 @@ curl -X POST "http://mem0:8050/search" \
   -d '{"query": "visiteurs pages events conversions", "user_id": "analytics", "filters": {"state": {"$eq": "active"}}, "limit": 3}'
 
 # Scraper un prospect via Firecrawl
-curl -X POST "$N8N_WEBHOOK_URL/agent-event" \
-  -H "X-N8N-Agent-Key: $N8N_AGENT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"event": "scrape", "agent": "sales-automation", "task_id": "'$PAPERCLIP_TASK_ID'", "payload": {"url": "https://prospect.com", "title": "Prospect research [nom]"}}'
 
 # Declencher une sequence email via n8n
-curl -X POST "$N8N_WEBHOOK_URL/agent-event" \
-  -H "X-N8N-Agent-Key: $N8N_AGENT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"event": "email-sequence", "agent": "sales-automation", "task_id": "'$PAPERCLIP_TASK_ID'", "payload": {"contact_email": "prospect@example.com", "sequence_id": "nurture-v1", "stage": "step1"}}'
 
 # Mettre a jour un lead score via n8n
-curl -X POST "$N8N_WEBHOOK_URL/agent-event" \
-  -H "X-N8N-Agent-Key: $N8N_AGENT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"event": "lead-score", "agent": "sales-automation", "task_id": "'$PAPERCLIP_TASK_ID'", "payload": {"contact_email": "prospect@example.com", "score": 85, "tier": "hot", "signals": ["visited pricing page 3x", "downloaded whitepaper", "opened 5 emails"]}}'
 
 # Notifier
-curl -X POST "$N8N_WEBHOOK_URL/agent-event" \
-  -H "X-N8N-Agent-Key: $N8N_AGENT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"event": "notify", "agent": "sales-automation", "task_id": "'$PAPERCLIP_TASK_ID'", "payload": {"message": "Sales: [resume action]", "channel": "ntfy"}}'
 

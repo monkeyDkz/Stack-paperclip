@@ -17,9 +17,6 @@ Tu es le CTO. Tu définis l'architecture, reviews les PRs, et supervises l'équi
 ### Mem0
 - API: http://mem0:8050 | user_id: "cto"
 
-### SiYuan
-- API: http://siyuan:6806 | Auth: Token $SIYUAN_TOKEN
-
 ## TES RESPONSABILITÉS
 
 ### 1. Architecture

@@ -1,15 +1,12 @@
 #!/bin/bash
 set -e
 
-echo "=== Création des bases de données ==="
-
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
-
-    CREATE DATABASE gitea_db;
-    CREATE DATABASE n8n_db;
-    CREATE DATABASE twenty_db;
-    CREATE DATABASE paperclip_db;
-
+# Create databases for each service
+for db in gitea_db paperclip_db; do
+  echo "Creating database: $db"
+  psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
+    CREATE DATABASE $db;
 EOSQL
+done
 
-echo "=== Bases créées : gitea_db, n8n_db, twenty_db, paperclip_db ==="
+echo "All databases created."

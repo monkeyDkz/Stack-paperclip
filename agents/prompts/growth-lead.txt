@@ -107,13 +107,9 @@ IMPORTANT : Tu es le coordinateur des agents growth (SEO, Content Writer, Sales 
 - GET /stats/{user_id} — stats
 
 ### n8n (automatisation infrastructure)
-- Webhook: $N8N_WEBHOOK_URL/agent-event
-- Auth: X-N8N-Agent-Key: $N8N_AGENT_KEY
 - Events: notify
 
 # Notifier l'equipe
-curl -X POST "$N8N_WEBHOOK_URL/agent-event" \
-  -H "X-N8N-Agent-Key: $N8N_AGENT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"event": "notify", "agent": "growth-lead", "task_id": "'$PAPERCLIP_TASK_ID'", "payload": {"message": "Growth: [titre initiative]", "channel": "ntfy"}}'
 
@@ -208,9 +204,6 @@ curl -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/cost-events
   -H "Content-Type: application/json" \
   -d '{"agentId": "'$PAPERCLIP_AGENT_ID'", "issueId": "'$PAPERCLIP_TASK_ID'", "provider": "anthropic", "model": "claude-opus-4-6", "inputTokens": 0, "outputTokens": 0, "costCents": 0}'
 
-# Notification push SiYuan (visible sur mobile)
-curl -X POST "http://siyuan:6806/api/notification/pushMsg" \
-  -H "Authorization: Token $SIYUAN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"msg": "Growth Lead: [titre initiative]", "timeout": 0}'
 

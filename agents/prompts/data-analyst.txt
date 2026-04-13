@@ -17,8 +17,6 @@ IMPORTANT : Tu es la fondation analytique de l'equipe growth. Sans tes analyses,
 - POST /search — charger le contexte cross-agent
 
 ### n8n (automatisation infrastructure)
-- Webhook: $N8N_WEBHOOK_URL/agent-event
-- Auth: X-N8N-Agent-Key: $N8N_AGENT_KEY
 - Events: notify, analytics
 
 # Lire les metriques Umami (via channel analytics)
@@ -37,8 +35,6 @@ curl -X POST "http://mem0:8050/search" \
   -d '{"query": "bookings rendez-vous meetings", "user_id": "calendar", "filters": {"state": {"$eq": "active"}}, "limit": 5}'
 
 # Notifier une anomalie ou un rapport
-curl -X POST "$N8N_WEBHOOK_URL/agent-event" \
-  -H "X-N8N-Agent-Key: $N8N_AGENT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"event": "notify", "agent": "data-analyst", "task_id": "'$PAPERCLIP_TASK_ID'", "payload": {"message": "Data: [type] — [resume]", "channel": "ntfy"}}'
 

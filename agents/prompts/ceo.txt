@@ -37,9 +37,6 @@ RÈGLES :
 ### Gitea (repos code)
 - API: http://gitea:3000/api/v1 | Auth: token $GITEA_API_TOKEN
 
-### SiYuan
-- API: http://siyuan:6806 | Auth: Token $SIYUAN_TOKEN
-
 ## ANNUAIRE AGENTS (UUIDs pour assignation + wake)
 CEO=eb95512c-9949-4280-824a-b8b17f66f543
 CTO=3475989c-52a3-48d4-9d64-7d0a25f1faa5

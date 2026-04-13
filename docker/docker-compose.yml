@@ -1,9 +1,6 @@
 # ============================================================
-# NOUVELLE STACK — Test local avant déploiement OVH
-# 20 services · 1 réseau · PostgreSQL partagé
-# Claude API remplace Ollama / LM Studio / LiteLLM
-# ============================================================
-# Usage : ./setup.sh (clone Paperclip + démarre la stack)
+# PAPERCLIP STACK — Multi-agent AI orchestration
+# Services: Paperclip, Gitea, Postgres, Redis, Mem0, Chroma, Playwright
 # ============================================================
 
 services:
@@ -53,7 +50,7 @@ services:
     networks:
       - stack-network
 
-  # ── DEVOPS ────────────────────────────────────────────────
+  # ── GIT ────────────────────────────────────────────────────
 
   gitea:
     image: gitea/gitea:latest
@@ -84,241 +81,7 @@ services:
     networks:
       - stack-network
 
-
-  # Playwright E2E (déclenché par n8n / Gitea CI post-deploy)
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.49.0-noble
-    container_name: playwright
-    restart: unless-stopped
-    working_dir: /tests
-    volumes:
-      - playwright_tests:/tests
-      - playwright_results:/results
-    environment:
-      CI: "true"
-    command: ["node", "/tests/playwright-api.js"]
-    networks:
-      - stack-network
-
-  # ── SCRAPING ────────────────────────────────────────────────
-
-  # Firecrawl : scraper web → Markdown propre (utilisé par Paperclip + n8n)
-  # Playwright microservice dédié à Firecrawl (séparé du playwright E2E)
-  firecrawl-playwright:
-    image: ghcr.io/firecrawl/playwright-service:latest
-    container_name: firecrawl-playwright
-    restart: unless-stopped
-    environment:
-      PORT: "3000"
-    networks:
-      - stack-network
-
-  firecrawl-worker:
-    image: ghcr.io/firecrawl/firecrawl:latest
-    container_name: firecrawl-worker
-    restart: unless-stopped
-    command: ["node", "dist/src/services/queue-worker.js"]
-    environment:
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      REDIS_RATE_LIMIT_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      PLAYWRIGHT_MICROSERVICE_URL: http://firecrawl-playwright:3000/scrape
-      BULL_AUTH_KEY: ${FIRECRAWL_BULL_KEY:-firecrawl_admin}
-      USE_DB_AUTHENTICATION: "false"
-      NUQ_DATABASE_URL: postgresql://${POSTGRES_ADMIN_USER}:${POSTGRES_ADMIN_PASSWORD}@postgres:5432/firecrawl_db
-      SCRAPING_BEE_API_KEY: ""
-      OPENAI_API_KEY: ""
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      firecrawl-playwright:
-        condition: service_started
-    networks:
-      - stack-network
-
-  # Nom du service = firecrawl-api pour correspondre aux skills Paperclip
-  firecrawl-api:
-    image: ghcr.io/firecrawl/firecrawl:latest
-    container_name: firecrawl-api
-    restart: unless-stopped
-    environment:
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      REDIS_RATE_LIMIT_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      PLAYWRIGHT_MICROSERVICE_URL: http://firecrawl-playwright:3000/scrape
-      BULL_AUTH_KEY: ${FIRECRAWL_BULL_KEY:-firecrawl_admin}
-      TEST_API_KEY: ${FIRECRAWL_BULL_KEY:-firecrawl_admin}
-      USE_DB_AUTHENTICATION: "false"
-      NUQ_DATABASE_URL: postgresql://${POSTGRES_ADMIN_USER}:${POSTGRES_ADMIN_PASSWORD}@postgres:5432/firecrawl_db
-      SCRAPING_BEE_API_KEY: ""
-      OPENAI_API_KEY: ""
-    ports:
-      - "3008:3002"
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      firecrawl-playwright:
-        condition: service_started
-      firecrawl-worker:
-        condition: service_started
-    networks:
-      - stack-network
-
-  # ── AUTOMATION ──────────────────────────────────────────────
-
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: n8n
-    restart: unless-stopped
-    environment:
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_HOST: postgres
-      DB_POSTGRESDB_PORT: "5432"
-      DB_POSTGRESDB_DATABASE: n8n_db
-      DB_POSTGRESDB_USER: ${POSTGRES_ADMIN_USER:-admin}
-      DB_POSTGRESDB_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
-      N8N_HOST: localhost
-      N8N_PORT: "5678"
-      N8N_PROTOCOL: http
-      N8N_SECURE_COOKIE: "false"
-      WEBHOOK_URL: http://localhost:5678/
-      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY}
-      GENERIC_TIMEZONE: Europe/Paris
-      N8N_COMMUNITY_PACKAGES_ENABLED: "true"
-      N8N_DIAGNOSTICS_ENABLED: "false"
-      # Claude API disponible dans tous les workflows n8n
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?Set ANTHROPIC_API_KEY}
-    volumes:
-      - n8n_data:/home/node/.n8n
-    ports:
-      - "5678:5678"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - stack-network
-
-  # ── BUSINESS ──────────────────────────────────────────────
-
-  twenty-server:
-    image: twentycrm/twenty:latest
-    container_name: twenty-server
-    restart: unless-stopped
-    environment:
-      SERVER_URL: http://localhost:3003
-      PG_DATABASE_URL: postgresql://${POSTGRES_ADMIN_USER:-admin}:${POSTGRES_ADMIN_PASSWORD}@postgres:5432/twenty_db
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      APP_SECRET: ${TWENTY_APP_SECRET:?Set TWENTY_APP_SECRET}
-      STORAGE_TYPE: local
-      # Limite heap Node.js à 768MB pour éviter OOM kill (exit 137)
-      NODE_OPTIONS: "--max-old-space-size=768"
-    volumes:
-      - twenty_data:/app/.local-storage
-    ports:
-      - "3003:3000"
-    deploy:
-      resources:
-        limits:
-          memory: 1024M
-    depends_on:
-      twenty-worker:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - stack-network
-
-  twenty-worker:
-    image: twentycrm/twenty:latest
-    container_name: twenty-worker
-    restart: unless-stopped
-    command: ["yarn", "worker:prod"]
-    environment:
-      PG_DATABASE_URL: postgresql://${POSTGRES_ADMIN_USER:-admin}:${POSTGRES_ADMIN_PASSWORD}@postgres:5432/twenty_db
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      APP_SECRET: ${TWENTY_APP_SECRET}
-      STORAGE_TYPE: local
-      NODE_OPTIONS: "--max-old-space-size=512"
-    deploy:
-      resources:
-        limits:
-          memory: 768M
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - stack-network
-
-  uptime-kuma:
-    image: louislam/uptime-kuma:2
-    container_name: uptime-kuma
-    restart: unless-stopped
-    volumes:
-      - uptime_kuma_data:/app/data
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "3001:3001"
-    networks:
-      - stack-network
-
-  ntfy:
-    image: binwiederhier/ntfy
-    container_name: ntfy
-    restart: unless-stopped
-    command: serve
-    volumes:
-      - ntfy_cache:/var/cache/ntfy
-      - ./configs/ntfy/server.yml:/etc/ntfy/server.yml:ro
-    ports:
-      - "8085:80"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:80/v1/health -O - | grep -Eo '\"healthy\"\\s*:\\s*true' || exit 1"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-    networks:
-      - stack-network
-
-  # Homarr remplace Oak comme dashboard
-  homarr:
-    image: ghcr.io/ajnart/homarr:latest
-    container_name: homarr
-    restart: unless-stopped
-    volumes:
-      - homarr_configs:/app/data/configs
-      - homarr_icons:/app/public/icons
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "7575:7575"
-    networks:
-      - stack-network
-
-  duplicati:
-    image: lscr.io/linuxserver/duplicati:latest
-    container_name: duplicati
-    restart: unless-stopped
-    environment:
-      PUID: "1000"
-      PGID: "1000"
-      TZ: Europe/Paris
-      SETTINGS_ENCRYPTION_KEY: ${DUPLICATI_ENCRYPTION_KEY:-changeme_duplicati_key}
-    volumes:
-      - duplicati_config:/config
-      - ./backups:/backups
-    ports:
-      - "8200:8200"
-    networks:
-      - stack-network
-
-  # ── COUCHE IA (anciennement Mac → maintenant serveur) ──────
+  # ── AI / MEMORY ────────────────────────────────────────────
 
   chroma:
     image: chromadb/chroma:latest
@@ -334,7 +97,6 @@ services:
     networks:
       - stack-network
 
-  # Mem0 : build local (wrapper FastAPI autour de mem0ai)
   mem0:
     build:
       context: ./configs/mem0
@@ -342,8 +104,7 @@ services:
     restart: unless-stopped
     environment:
       MEM0_CONFIG: /app/config.yaml
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      # Cache HuggingFace persistant — évite re-téléchargement du modèle à chaque restart
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       TRANSFORMERS_CACHE: /app/hf_cache
       HF_HOME: /app/hf_cache
     volumes:
@@ -359,26 +120,37 @@ services:
       interval: 30s
       timeout: 15s
       retries: 5
-      # start_period laisse le temps au modèle HF de se charger au premier démarrage
       start_period: 120s
     networks:
       - stack-network
 
-  # SiYuan : version unlock (API complète, utilisée par Paperclip)
-  siyuan:
-    image: apkdv/siyuan-unlock:latest
-    container_name: siyuan
+  # ── BROWSER AUTOMATION ─────────────────────────────────────
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.49.0-noble
+    container_name: playwright
     restart: unless-stopped
-    environment:
-      SIYUAN_ACCESS_AUTH_CODE: ${SIYUAN_TOKEN:?Set SIYUAN_TOKEN}
+    working_dir: /tests
     volumes:
-      - siyuan_data:/siyuan/workspace
-    ports:
-      - "6806:6806"
+      - playwright_tests:/tests
+      - playwright_results:/results
+    environment:
+      CI: "true"
+    command: ["node", "/tests/playwright-api.js"]
     networks:
       - stack-network
 
-  # Paperclip : build depuis les sources (setup.sh clone le repo)
+  firecrawl-playwright:
+    image: ghcr.io/firecrawl/playwright-service:latest
+    container_name: firecrawl-playwright
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+    networks:
+      - stack-network
+
+  # ── PAPERCLIP (agent orchestrator) ─────────────────────────
+
   paperclip:
     build:
       context: ./paperclip-repo
@@ -391,30 +163,11 @@ services:
       PAPERCLIP_ALLOWED_HOSTNAMES: localhost
       PAPERCLIP_DEPLOYMENT_MODE: authenticated
       BETTER_AUTH_TRUSTED_ORIGINS: http://localhost:3100
-      # Claude billing — mode subscription (Max/Pro)
-      # ANTHROPIC_API_KEY volontairement absent → Paperclip utilise la session claude login
-      # n8n et mem0 gardent leur propre clé API pour leurs usages internes
-      # Chemin de la session Claude Code (partagé entre tous les agents)
       CLAUDE_CONFIG_DIR: /claude-config
-      # Services connectés (réseau interne Docker)
       MEM0_URL: http://mem0:8050
-      N8N_WEBHOOK_URL: http://n8n:5678/webhook
-      N8N_AGENT_KEY: ${N8N_AGENT_KEY:?Set N8N_AGENT_KEY}
-      SIYUAN_URL: http://siyuan:6806
-      SIYUAN_TOKEN: ${SIYUAN_API_TOKEN:-${SIYUAN_TOKEN}}
-      SIYUAN_API_TOKEN: ${SIYUAN_API_TOKEN:-${SIYUAN_TOKEN}}
-      SIYUAN_NOTEBOOK_ID: ${SIYUAN_NOTEBOOK_ID}
-      # Gitea
       GITEA_URL: http://gitea:3000
       GITEA_API_TOKEN: ${GITEA_API_TOKEN}
-      # Twenty CRM
-      TWENTY_URL: http://twenty-server:3000
-      TWENTY_API_TOKEN: ${TWENTY_API_TOKEN}
-      # n8n credentials
-      N8N_ADMIN_EMAIL: ${N8N_ADMIN_EMAIL:-admin@stack.local}
-      N8N_ADMIN_PASSWORD: ${N8N_ADMIN_PASSWORD:-Stack2026!}
       PAPERCLIP_AGENT_JWT_SECRET: ${PAPERCLIP_AGENT_JWT_SECRET:?Set PAPERCLIP_AGENT_JWT_SECRET}
-      # Admin bootstrap (premier démarrage uniquement)
       PAPERCLIP_ADMIN_EMAIL: ${PAPERCLIP_ADMIN_EMAIL:-admin@paperclip.local}
       PAPERCLIP_ADMIN_PASSWORD: ${PAPERCLIP_ADMIN_PASSWORD:?Set PAPERCLIP_ADMIN_PASSWORD}
       PAPERCLIP_ADMIN_NAME: ${PAPERCLIP_ADMIN_NAME:-Admin}
@@ -430,8 +183,6 @@ services:
         condition: service_healthy
       mem0:
         condition: service_healthy
-      siyuan:
-        condition: service_started
     networks:
       - stack-network
 
@@ -439,21 +190,12 @@ volumes:
   postgres_data:
   redis_data:
   gitea_data:
-  n8n_data:
-  twenty_data:
-  uptime_kuma_data:
-  ntfy_cache:
-  homarr_configs:
-  homarr_icons:
-  duplicati_config:
   chroma_data:
   mem0_data:
   mem0_hf_cache:
-  siyuan_data:
   paperclip_data:
   playwright_tests:
   playwright_results:
-  # claude_config: remplacé par bind mount ~/.claude-config
 
 networks:
   stack-network:

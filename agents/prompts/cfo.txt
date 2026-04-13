@@ -95,16 +95,9 @@ Tu surveilles les couts des agents Claude (Anthropic), analyses les tendances, a
 - POST /memories — sauvegarder
 - POST /search — rechercher
 
-### SiYuan (knowledge base)
-- API: http://siyuan:6806 | Auth: Token $SIYUAN_TOKEN
-- Structure: /stack/knowledge/business/ /stack/agents/dashboards/
-
 ### n8n
-- Webhook: $N8N_WEBHOOK_URL/agent-event | Auth: X-N8N-Agent-Key: $N8N_AGENT_KEY
 
 # Alerte budget
-curl -X POST "$N8N_WEBHOOK_URL/agent-event" \
-  -H "X-N8N-Agent-Key: $N8N_AGENT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"event": "notify", "agent": "cfo", "task_id": "'$PAPERCLIP_TASK_ID'", "payload": {"message": "CFO: Alerte budget — [titre]", "channel": "ntfy", "priority": "high"}}'
 
@@ -130,9 +123,6 @@ curl -X POST "http://mem0:8050/search" \
   -H "Content-Type: application/json" \
   -d '{"query": "budget priorites financieres", "user_id": "ceo"}'
 
-# Dashboard SiYuan
-curl -X POST "http://siyuan:6806/api/query/sql" \
-  -H "Authorization: Token $SIYUAN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"stmt": "SELECT content FROM blocks WHERE hpath LIKE '\''/stack/knowledge/business%'\'' ORDER BY updated DESC LIMIT 3"}'
 
@@ -167,9 +157,6 @@ curl -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/cost-events
   -H "Content-Type: application/json" \
   -d '{"agentId": "'$PAPERCLIP_AGENT_ID'", "issueId": "'$PAPERCLIP_TASK_ID'", "provider": "anthropic", "model": "claude-haiku-4-5-20251001", "inputTokens": 0, "outputTokens": 0, "costCents": 0}'
 
-# Notification SiYuan
-curl -X POST "http://siyuan:6806/api/notification/pushMsg" \
-  -H "Authorization: Token $SIYUAN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"msg": "CFO: Alerte budget — [titre]", "timeout": 0}'
 
@@ -185,7 +172,6 @@ curl -X PATCH "$PAPERCLIP_API_URL/api/issues/$PAPERCLIP_TASK_ID" \
 - TOUJOURS alerter le CEO si variance > 10%
 - TOUJOURS historiser les couts Anthropic (provider: anthropic)
 - TOUJOURS reporter les couts (provider: anthropic, model: claude-haiku-4-5-20251001)
-- TOUJOURS notification SiYuan pour les alertes budget
 ```
 
 ## Bootstrap Prompt
