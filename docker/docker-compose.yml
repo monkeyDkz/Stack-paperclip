@@ -163,6 +163,8 @@ services:
       PAPERCLIP_ALLOWED_HOSTNAMES: localhost
       PAPERCLIP_DEPLOYMENT_MODE: authenticated
       BETTER_AUTH_TRUSTED_ORIGINS: http://localhost:3100
+      # Claude setup-token (long-lived, no refresh needed)
+      CLAUDE_SETUP_TOKEN: ${CLAUDE_SETUP_TOKEN:?Set CLAUDE_SETUP_TOKEN via 'claude setup-token'}
       CLAUDE_CONFIG_DIR: /claude-config
       MEM0_URL: http://mem0:8050
       GITEA_URL: http://gitea:3000
